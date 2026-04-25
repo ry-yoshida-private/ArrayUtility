@@ -1,15 +1,28 @@
 from __future__ import annotations
 
+from abc import abstractmethod
 from dataclasses import dataclass
 import warnings
 
 import numpy as np
 
-from .base import BaseRingBuffer
+from ..base import BaseRingBuffer
 
 
 @dataclass
-class RingBuffer(BaseRingBuffer):
+class BaseStandardRingBuffer(BaseRingBuffer):
+    def __post_init__(self) -> None:
+        """
+        Run base validation and subclass-specific dtype checks.
+        """
+        super().__post_init__()
+        self._validate_dtype()
+
+    def _validate_dtype(self) -> None:
+        """
+        Optional dtype validation hook for subclasses.
+        """
+
     def update(self, value: np.ndarray) -> None:
         """
         Update the buffer with a new vector.
@@ -29,7 +42,7 @@ class RingBuffer(BaseRingBuffer):
         Parameters
         ----------
         values : np.ndarray
-            The new vectors with shape (n, *feature_shape) to be stored.
+            The new vectors with shape (m, *feature_shape) to be stored.
         """
         m = len(values)
         if m > self.n:
@@ -48,14 +61,13 @@ class RingBuffer(BaseRingBuffer):
         self._update_index(m)
 
     @property
+    @abstractmethod
     def mean(self) -> np.ndarray:
         """
-        Get the mean of the buffer.
+        Get the representative value of the buffer.
 
         Returns
         -------
         np.ndarray
-            The mean of the buffer.
+            Representative value with shape (*feature_shape).
         """
-
-        return np.mean(self.value, axis=0)

@@ -1,20 +1,46 @@
 from __future__ import annotations
 
+from abc import abstractmethod
 from dataclasses import dataclass, field
 import warnings
 
 import numpy as np
 
-from .base import BaseRingBuffer
+from ..base import BaseRingBuffer
 
 
 @dataclass
-class AveragingRingBuffer(BaseRingBuffer):
-    _sum: np.ndarray = field(init=False)
+class BaseAveragingRingBuffer(BaseRingBuffer):
+    _accumulator: np.ndarray = field(init=False)
 
     def __post_init__(self) -> None:
+        """
+        Run validation and initialize cached accumulator from current buffer values.
+        """
         super().__post_init__()
-        self._sum = np.sum(self.value, axis=0)
+        self._validate_dtype()
+        self._accumulator = self._sum_chunk(self.value)
+
+    def _validate_dtype(self) -> None:
+        """
+        Optional dtype validation hook for subclasses.
+        """
+
+    @abstractmethod
+    def _sum_chunk(self, values: np.ndarray) -> np.ndarray:
+        """
+        Convert one or more vectors into accumulated statistics.
+
+        Parameters
+        ----------
+        values : np.ndarray
+            Values with shape (m, *feature_shape).
+
+        Returns
+        -------
+        np.ndarray
+            Accumulated statistics with shape (*accumulator_shape).
+        """
 
     def update(self, value: np.ndarray) -> None:
         """
@@ -26,8 +52,8 @@ class AveragingRingBuffer(BaseRingBuffer):
             The new vector with shape (*feature_shape) to be stored.
         """
         old_value = self.value[self._index]
-        self._sum += value
-        self._sum -= old_value
+        self._accumulator += self._sum_chunk(value[None, ...])
+        self._accumulator -= self._sum_chunk(old_value[None, ...])
         self.value[self._index] = value
         self._update_index()
 
@@ -38,7 +64,7 @@ class AveragingRingBuffer(BaseRingBuffer):
         Parameters
         ----------
         values : np.ndarray
-            The new vectors with shape (n, *feature_shape) to be stored.
+            The new vectors with shape (m, *feature_shape) to be stored.
         """
         m = len(values)
         if m > self.n:
@@ -52,32 +78,30 @@ class AveragingRingBuffer(BaseRingBuffer):
         end_space = self.n - self._index
         if m <= end_space:
             old_chunk = self.value[self._index : self._index + m]
-            self._sum -= np.sum(old_chunk, axis=0)
-            self._sum += np.sum(values, axis=0)
+            self._accumulator -= self._sum_chunk(old_chunk)
+            self._accumulator += self._sum_chunk(values)
             self.value[self._index : self._index + m] = values
         else:
             first_values = values[:end_space]
             second_values = values[end_space:]
             old_first = self.value[self._index :]
             old_second = self.value[: m - end_space]
-            self._sum -= np.sum(old_first, axis=0)
-            self._sum -= np.sum(old_second, axis=0)
-            self._sum += np.sum(first_values, axis=0)
-            self._sum += np.sum(second_values, axis=0)
+            self._accumulator -= self._sum_chunk(old_first)
+            self._accumulator -= self._sum_chunk(old_second)
+            self._accumulator += self._sum_chunk(first_values)
+            self._accumulator += self._sum_chunk(second_values)
             self.value[self._index :] = first_values
             self.value[: m - end_space] = second_values
         self._update_index(m)
 
     @property
+    @abstractmethod
     def mean(self) -> np.ndarray:
         """
-        Get the mean of the buffer.
+        Get the representative value of the buffer.
 
         Returns
         -------
         np.ndarray
-            The mean of the buffer.
+            Representative value with shape (*feature_shape).
         """
-
-        return self._sum / self.n
-
