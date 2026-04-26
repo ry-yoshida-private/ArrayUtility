@@ -47,6 +47,8 @@ class BitEMACalculator:
         if value.dtype != np.uint8:
             raise TypeError("BitEMACalculator only supports uint8 arrays.")
         bits = np.unpackbits(value, axis=-1)
+        if bits.shape != self._ema_value.shape:
+            raise ValueError(f"unpacked value shape {bits.shape} must match {self._ema_value.shape}")
         self._ema_value += self.alpha * (bits - self._ema_value)
 
     @property

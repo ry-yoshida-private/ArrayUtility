@@ -32,6 +32,7 @@ class BaseStandardRingBuffer(BaseRingBuffer):
         value : np.ndarray
             The new vector with shape (*feature_shape) to be stored.
         """
+        self._validate_vector_shape(value)
         self.value[self._index] = value
         self._update_index()
 
@@ -44,6 +45,7 @@ class BaseStandardRingBuffer(BaseRingBuffer):
         values : np.ndarray
             The new vectors with shape (m, *feature_shape) to be stored.
         """
+        self._validate_batch_shape(values)
         m = len(values)
         if m > self.n:
             warnings.warn(

@@ -51,6 +51,7 @@ class BaseAveragingRingBuffer(BaseRingBuffer):
         value : np.ndarray
             The new vector with shape (*feature_shape) to be stored.
         """
+        self._validate_vector_shape(value)
         old_value = self.value[self._index]
         self._accumulator += self._sum_chunk(value[None, ...])
         self._accumulator -= self._sum_chunk(old_value[None, ...])
@@ -66,6 +67,7 @@ class BaseAveragingRingBuffer(BaseRingBuffer):
         values : np.ndarray
             The new vectors with shape (m, *feature_shape) to be stored.
         """
+        self._validate_batch_shape(values)
         m = len(values)
         if m > self.n:
             warnings.warn(

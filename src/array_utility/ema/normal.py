@@ -24,6 +24,8 @@ class EMACalculator:
     def __post_init__(self) -> None:
         if not 0.0 <= self.alpha <= 1.0:
             raise ValueError(f"alpha must be in [0, 1], but got {self.alpha}")
+        if not np.issubdtype(self.value.dtype, np.floating):
+            raise TypeError(f"value dtype must be floating, but got {self.value.dtype}")
 
     def update(self, value: npt.NDArray[np.floating[Any]]) -> None:
         """
@@ -34,4 +36,6 @@ class EMACalculator:
         value : np.ndarray
             New sample with shape (*feature_shape).
         """
+        if value.shape != self.value.shape:
+            raise ValueError(f"value shape {value.shape} must match {self.value.shape}")
         self.value += self.alpha * (value - self.value)

@@ -25,6 +25,14 @@ class TestEMACalculator(unittest.TestCase):
         ema.update(np.array([10.0, 0.0], dtype=np.float32))
         np.testing.assert_allclose(ema.value, np.array([2.0, 8.0], dtype=np.float32))
 
+    def test_requires_floating_dtype_and_matching_shape(self) -> None:
+        with self.assertRaises(TypeError):
+            EMACalculator(alpha=0.2, value=np.array([0, 10], dtype=np.int32))
+
+        ema = EMACalculator(alpha=0.2, value=np.array([0.0, 10.0], dtype=np.float32))
+        with self.assertRaises(ValueError):
+            ema.update(np.array([[10.0, 0.0]], dtype=np.float32))
+
 
 class TestBitEMACalculator(unittest.TestCase):
     def test_value_thresholds_bits_with_ema(self) -> None:
@@ -43,8 +51,17 @@ class TestBitEMACalculator(unittest.TestCase):
         with self.assertRaises(TypeError):
             ema.update(np.array([1.0], dtype=np.float32))
 
+    def test_requires_matching_shape(self) -> None:
+        ema = BitEMACalculator.build(alpha=0.2, value=np.array([0b00000000], dtype=np.uint8))
+        with self.assertRaises(ValueError):
+            ema.update(np.array([0b11110000, 0b00001111], dtype=np.uint8))
+
 
 class TestRingBuffer(unittest.TestCase):
+    def test_build_requires_positive_n(self) -> None:
+        with self.assertRaises(ValueError):
+            RingBuffer.build(n=0, init_value=np.array([0.0, 0.0], dtype=np.float32))
+
     def test_update_extend_and_accessors(self) -> None:
         buf = RingBuffer.build(n=3, init_value=np.array([0.0, 0.0], dtype=np.float32))
         buf.update(np.array([1.0, 1.0], dtype=np.float32))
@@ -73,6 +90,13 @@ class TestRingBuffer(unittest.TestCase):
             np.array([[2.0], [3.0], [4.0]], dtype=np.float32),
         )
 
+    def test_requires_matching_shape_for_update_and_extend(self) -> None:
+        buf = RingBuffer.build(n=3, init_value=np.array([0.0, 0.0], dtype=np.float32))
+        with self.assertRaises(ValueError):
+            buf.update(np.array([[1.0, 1.0]], dtype=np.float32))
+        with self.assertRaises(ValueError):
+            buf.extend(np.array([[1.0], [2.0]], dtype=np.float32))
+
 
 class TestAveragingRingBuffer(unittest.TestCase):
     def test_mean_uses_cached_accumulator_after_updates(self) -> None:
@@ -84,6 +108,13 @@ class TestAveragingRingBuffer(unittest.TestCase):
 
         buf.extend(np.array([[4.0, 8.0], [5.0, 10.0]], dtype=np.float32))
         np.testing.assert_allclose(buf.mean, np.array([4.0, 8.0], dtype=np.float32))
+
+    def test_requires_matching_shape_for_update_and_extend(self) -> None:
+        buf = AveragingRingBuffer.build(n=3, init_value=np.array([0.0, 0.0], dtype=np.float32))
+        with self.assertRaises(ValueError):
+            buf.update(np.array([[1.0, 2.0]], dtype=np.float32))
+        with self.assertRaises(ValueError):
+            buf.extend(np.array([[1.0], [2.0]], dtype=np.float32))
 
 
 class TestBitRingBuffers(unittest.TestCase):
@@ -108,6 +139,18 @@ class TestBitRingBuffers(unittest.TestCase):
             BitRingBuffer.build(n=2, init_value=np.array([1.0], dtype=np.float32))
         with self.assertRaises(TypeError):
             BitAveragingRingBuffer.build(n=2, init_value=np.array([1.0], dtype=np.float32))
+
+        bit_buf = BitRingBuffer.build(n=2, init_value=np.array([0b00000000], dtype=np.uint8))
+        with self.assertRaises(TypeError):
+            bit_buf.update(np.array([1.0], dtype=np.float32))
+        with self.assertRaises(TypeError):
+            bit_buf.extend(np.array([[1.0]], dtype=np.float32))
+
+        bit_avg_buf = BitAveragingRingBuffer.build(n=2, init_value=np.array([0b00000000], dtype=np.uint8))
+        with self.assertRaises(TypeError):
+            bit_avg_buf.update(np.array([1.0], dtype=np.float32))
+        with self.assertRaises(TypeError):
+            bit_avg_buf.extend(np.array([[1.0]], dtype=np.float32))
 
 
 if __name__ == "__main__":

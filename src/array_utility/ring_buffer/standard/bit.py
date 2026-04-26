@@ -25,6 +25,16 @@ class BitRingBuffer(BaseStandardRingBuffer):
         if self.value.dtype != np.uint8:
             raise TypeError(f"value dtype must be uint8, but got {self.value.dtype}")
 
+    def update(self, value: np.ndarray) -> None:
+        if value.dtype != np.uint8:
+            raise TypeError(f"value dtype must be uint8, but got {value.dtype}")
+        super().update(value)
+
+    def extend(self, values: np.ndarray) -> None:
+        if values.dtype != np.uint8:
+            raise TypeError(f"values dtype must be uint8, but got {values.dtype}")
+        super().extend(values)
+
     @property
     def mean(self) -> np.ndarray:
         """

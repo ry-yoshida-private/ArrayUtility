@@ -29,6 +29,8 @@ class BaseRingBuffer(ABC):
     _index: int = field(init=False, default=0)
 
     def __post_init__(self):
+        if self.n <= 0:
+            raise ValueError(f"n must be greater than 0, but got {self.n}")
         if self.value.ndim == 1:
             raise ValueError(f"value must be 2D or higher, but got {self.value.ndim}")
         if self.value.shape[0] != self.n:
@@ -71,6 +73,18 @@ class BaseRingBuffer(ABC):
         if start >= 0:
             return self.value[start : self._index]
         return np.concatenate([self.value[start:], self.value[: self._index]], axis=0)
+
+    def _validate_vector_shape(self, value: np.ndarray) -> None:
+        expected_shape = self.value.shape[1:]
+        if value.shape != expected_shape:
+            raise ValueError(f"value shape {value.shape} must match {expected_shape}")
+
+    def _validate_batch_shape(self, values: np.ndarray) -> None:
+        if values.ndim != self.value.ndim:
+            raise ValueError(f"values ndim {values.ndim} must match {self.value.ndim}")
+        expected_shape = self.value.shape[1:]
+        if values.shape[1:] != expected_shape:
+            raise ValueError(f"values shape[1:] {values.shape[1:]} must match {expected_shape}")
 
     @property
     def latest(self) -> np.ndarray:
