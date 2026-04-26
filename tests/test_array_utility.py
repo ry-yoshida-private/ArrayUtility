@@ -97,6 +97,11 @@ class TestRingBuffer(unittest.TestCase):
         with self.assertRaises(ValueError):
             buf.extend(np.array([[1.0], [2.0]], dtype=np.float32))
 
+    def test_get_last_k_rejects_negative_k(self) -> None:
+        buf = RingBuffer.build(n=3, init_value=np.array([0.0, 0.0], dtype=np.float32))
+        with self.assertRaises(ValueError):
+            _ = buf.get_last_k(-1)
+
 
 class TestAveragingRingBuffer(unittest.TestCase):
     def test_mean_uses_cached_accumulator_after_updates(self) -> None:

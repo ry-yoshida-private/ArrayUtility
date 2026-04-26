@@ -67,8 +67,8 @@ class BaseRingBuffer(ABC):
         k : int
             The number of vectors to get.
         """
-        if k > self.n:
-            raise ValueError(f"k ({k}) cannot be greater than buffer size ({self.n})")
+        if not (0 <= k <= self.n):
+            raise ValueError(f"k ({k}) must be in range [0, {self.n}]")
         start = self._index - k
         if start >= 0:
             return self.value[start : self._index]
