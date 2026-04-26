@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from array_utility import (  # noqa: E402
     AveragingRingBuffer,
+    BitEMACalculator,
     BitAveragingRingBuffer,
     BitRingBuffer,
     EMACalculator,
@@ -23,6 +24,24 @@ class TestEMACalculator(unittest.TestCase):
         ema = EMACalculator(alpha=0.2, value=np.array([0.0, 10.0], dtype=np.float32))
         ema.update(np.array([10.0, 0.0], dtype=np.float32))
         np.testing.assert_allclose(ema.value, np.array([2.0, 8.0], dtype=np.float32))
+
+
+class TestBitEMACalculator(unittest.TestCase):
+    def test_value_thresholds_bits_with_ema(self) -> None:
+        ema = BitEMACalculator.build(alpha=0.4, value=np.array([0b00000000], dtype=np.uint8))
+        ema.update(np.array([0b11110000], dtype=np.uint8))
+        np.testing.assert_array_equal(ema.value, np.array([0b00000000], dtype=np.uint8))
+
+        ema.update(np.array([0b11110000], dtype=np.uint8))
+        np.testing.assert_array_equal(ema.value, np.array([0b11110000], dtype=np.uint8))
+
+    def test_requires_uint8_input(self) -> None:
+        with self.assertRaises(TypeError):
+            BitEMACalculator.build(alpha=0.2, value=np.array([1.0], dtype=np.float32))
+
+        ema = BitEMACalculator.build(alpha=0.2, value=np.array([0b00000000], dtype=np.uint8))
+        with self.assertRaises(TypeError):
+            ema.update(np.array([1.0], dtype=np.float32))
 
 
 class TestRingBuffer(unittest.TestCase):
