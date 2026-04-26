@@ -21,7 +21,8 @@ class BitEMACalculator:
     Attributes
     ----------
     _ema_value : np.ndarray
-        Internal per-bit EMA buffer with shape (*feature_shape, 8).
+        Internal per-bit EMA buffer. Its shape is the same as
+        `np.unpackbits(input, axis=-1)` (the last axis is expanded into bits).
     alpha : float, default=0.5
         Smoothing factor in [0, 1]. Larger values react faster to new samples.
     """
