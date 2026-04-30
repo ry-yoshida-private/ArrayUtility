@@ -1,10 +1,12 @@
 from .ema import BitEMACalculator, EMACalculator
-from .ring_buffer import BaseRingBuffer, AveragingRingBuffer, BitAveragingRingBuffer, BitRingBuffer
+from .ring_buffer import AveragingRingBuffer, BitAveragingRingBuffer, BitRingBuffer, RingBuffer
 
 __all__ = [
+    # ema
     "EMACalculator",
     "BitEMACalculator",
-    "BaseRingBuffer",
+    # ring buffer
+    "RingBuffer",
     "AveragingRingBuffer",
     "BitRingBuffer",
     "BitAveragingRingBuffer",

@@ -2,30 +2,21 @@
 
 ## Overview
 
-`ArrayUtility` is a Python repository that provides utility classes for array-based computation.
-It supports both Ring Buffer operations and Exponential Moving Average (EMA) updates.
-
-## Available utilities
-
-| Utility | Purpose | Notes |
-| ------- | ------- | ----- |
-| `EMACalculator` | Exponential moving average update | Good for lightweight smoothing in streams |
-| `BaseRingBuffer` | Base API for fixed-length history storage | Defines common buffer operations |
-| `AveragingRingBuffer` | Ring buffer with running mean | Efficient for frequent mean queries |
-
-For module-level details, see [src/README.md](src/README.md).
+`ArrayUtility` provides typed, NumPy-based utilities for streaming array operations.
+The package focuses on two domains: exponential moving average (EMA) and fixed-size ring buffers, including bit-oriented variants for `uint8` data.
 
 ## Requirements
 
+- Python 3.10+
 - `numpy`
 
-## Setup
+## Usage
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Example
+For module-level details, see [src/README.md](src/README.md).
 
 ```python
 import numpy as np
